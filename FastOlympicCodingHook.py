@@ -7,8 +7,9 @@ import threading
 import platform
 from os import path
 
+cpp_file_name_temp = ""
 def MakeHandlerClassFromFilename(file_full_path, tests_relative_dir, tests_file_suffix):
-    if not tests_file_suffix: tests_file_suffix = "__tests"
+    if not tests_file_suffix: tests_file_suffix = ":tests"
 
     class HandleRequests(BaseHTTPRequestHandler):
         def do_POST(self):
@@ -16,6 +17,15 @@ def MakeHandlerClassFromFilename(file_full_path, tests_relative_dir, tests_file_
                 content_length = int(self.headers['Content-Length'])
                 body = self.rfile.read(content_length)
                 tests = json.loads(body.decode('utf8'))
+                link = tests['url'].split("/")
+                # we declare the name
+                n_file_name = ""
+                if "contest" in link:
+                    n_file_name = link[len(link) - 3] + link[len(link) - 1]+".cpp"; 
+                else:
+                    n_file_name = link[len(link) - 2] + link[len(link) - 1]+".cpp"; 
+                print("n_file_name -> ",n_file_name)
+                # we make a new 1883D.cpp file
                 tests = tests["tests"]
                 ntests = []
                 for test in tests:
@@ -26,11 +36,17 @@ def MakeHandlerClassFromFilename(file_full_path, tests_relative_dir, tests_file_
                     ntests.append(ntest)
                 file_relative_dir = path.dirname(file_full_path)
                 file_name = path.basename(file_full_path)
-                nfilename = path.join(file_relative_dir, tests_relative_dir, file_name + tests_file_suffix) \
-                    if tests_relative_dir else path.join(file_relative_dir, file_name + tests_file_suffix)
+                nfilename = path.join(file_relative_dir, tests_relative_dir, n_file_name + tests_file_suffix) \
+                    if tests_relative_dir else path.join(file_relative_dir, n_file_name + tests_file_suffix)
                 print("New test case path: " + nfilename)
+                cpp_file_name = path.join(file_relative_dir,n_file_name)
+                cpp_file_name_temp = cpp_file_name
                 with open(nfilename, "w") as f:
                     f.write(json.dumps(ntests))
+                with open('/Users/siddhantsarkar/templateS.cpp','r') as firstfile, open(cpp_file_name,'w') as secondfile: 
+                    for line in firstfile: 
+                        print(line)
+                        secondfile.write(line)
             except Exception as e:
                 print("Error handling POST - " + str(e))
             threading.Thread(target=self.server.shutdown, daemon=True).start()
@@ -52,6 +68,7 @@ class CompetitiveCompanionServer:
 class FastOlympicCodingHookCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         try:
+            cpp_file_name_temp = ""
             _thread.start_new_thread(CompetitiveCompanionServer.startServer,
                                      (self.view.file_name(),
                                       sublime.load_settings("FastOlympicCoding.sublime-settings")))
