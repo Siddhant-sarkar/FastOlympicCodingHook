@@ -28,6 +28,7 @@ def MakeHandlerClassFromFilename(file_full_path, tests_relative_dir, tests_file_
 				content_length = int(self.headers['Content-Length'])
 				body = self.rfile.read(content_length)
 				tests = json.loads(body.decode('utf8'))
+				temp = tests
 				link = tests['url'].split("/")
 				# we declare the name
 				n_file_name = ""
@@ -39,13 +40,24 @@ def MakeHandlerClassFromFilename(file_full_path, tests_relative_dir, tests_file_
 				# we make a new 1883D.cpp file
 				tests = tests["tests"]
 				ntests = []
-				for test in tests:
-					ntest = {
-						# "test": test["input"],
-						"test": textSplitter(test["input"]),
-						"correct_answers": [test["output"].strip()]
-					}
-					ntests.append(ntest)
+				print("here is am " ,temp["group"])
+				if temp["group"].split(" ")[0] == "Codeforces":
+					for test in tests:
+						ntest = {
+							# "test": test["input"],
+							"test": textSplitter(test["input"]),
+							"correct_answers": [test["output"].strip()]
+						}
+						ntests.append(ntest)
+				else:	
+					print("hehe not codeforces")
+					for test in tests:
+						ntest = {
+							"test": test["input"],
+							# "test": textSplitter(test["input"]),
+							"correct_answers": [test["output"].strip()]
+						}
+						ntests.append(ntest)
 				file_relative_dir = path.dirname(file_full_path)
 				file_name = path.basename(file_full_path)
 				nfilename = path.join(file_relative_dir, tests_relative_dir, n_file_name + tests_file_suffix) \
